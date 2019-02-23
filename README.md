@@ -2,9 +2,9 @@
 
 ezpywinsvc is a starter kit for building robust windows service(s) in python!
 
-There are some basic logging, failure handling, and packages for interacting with APIs/Databases bundled in.
+There are some basic logging, failure handling, and packages included for interacting with APIs/Databases bundled in.
 
-I created this because I had a need to query a database on a regular basis and sync data from app to another via REST API. I needed as close to 24/7 stability as possible, and windows services are great for ensuring that the script will remain running at all times.
+I created this because I had a need to query a database on a regular basis and sync data from one app to another via REST APIs. I needed as close to 24/7 stability as possible, and windows services are great for ensuring that the script will remain running at all times.
 
 The advantage of this solution of making a python script into a service over others is it has broad compatibility with most modern versions of Windows and there is no Windows Service-specific python control code needed. The python script is converted to a portable .exe file that doesn't require python to be installed on the system to run. NSSM (The non-sucking service manager) (https://nssm.cc) is the tool I use to build the service from the compiled exe, and is much easier to create services with than the official Microsoft tools.
 
@@ -54,9 +54,13 @@ If using pyodbc, also make sure your created ODBC datasource a 32-bit datasource
 8. Test the service with services.msc (Windows Services) - debug.log will be created in the dist/myservice dir, and should be written to every 60 seconds.  Use a "tailing" log viewer such as BareTail (https://www.baremetalsoft.com/baretail/), or you will have to close/reopen the log file to see changes in notepad/most text editors.
 
 
-### To remove the service if something isn't right:
+### To remove the service for cleanup/ advanced troubleshooting
+
+Sometimes the service can just not work out. There may be windows user permissions issues, file permissions issues, all kinds of reasons. To remove the service from Windows Services properly:
 
 `nssm.exe remove myservice`
+
+You do not need to remove the service every time you change the source code and recompile. The service points at an EXE so if the EXE is updated it will use the new next time it starts. Just make sure you stop the running service before rebuilding.
 
 
 ### Dev/Test Cycle
@@ -67,17 +71,18 @@ If you are developing/testing the script in command prompt, set `DEBUG=True; SER
 
 Before using `build.bat` to compile and run as a service, set `DEBUG=False; SERVICE_MODE=True` in service.py
 
-Not doing so will crash your service, because `DEBUG=True` writes to the console window, which doesn't exist in a windowless python script.
+Leaving `DEBUG=True` when running as a service can crash your service when log events  happen, because it attempts writes to the console window, which doesn't exist in a windowless python script.
 
-SERVICE_MODE is a separate flag, because it sets how the script is running. SERVICE_MODE=False isn't strictly necessary to switch everytime. This is for supporting linux use/running as a script in DEBUG mode, and so that the auto-restart mechanisms to work correctly in the respective modes. When SERVICE_MODE=True,  (running as a windows service) `restart_application` kills the process which windows service manager will then restart automatically.  if `SERVICE_MODE=False`, it restarts the script using `python service.py`
+SERVICE_MODE is a separate flag, because it sets how the script is running. This is for supporting linux use/running as a script in DEBUG mode, and so that the auto-restart mechanisms to work correctly in the respective modes. When SERVICE_MODE=True,  (running as a windows service) `restart_application` kills the process which windows service manager will then restart automatically.  if `SERVICE_MODE=False`, it restarts the script using `python service.py`
 
 If you only change minor things, and are confident its not going to need to be tested in debug mode, you can always leave the flags set for "production" mode (aka running it as a service, as above). STOP the running service if it is running. Then just run `build.bat` to recompile. Start the service again. Verify correct output in dist/myservice/debug.log
 
-### Some recommended bundled libraries to help build your service
 
-pyodbc - database connectivity
-schedule - schedule subprocesses to run on regular basis
-simplejson - json parsing
-requests - make http requests
-rollbar - error reporting
-datadog - timeseries data graphs/monitoring
+### Some recommended/bundled libraries to help in building your service:
+
+*  pyodbc - database connectivity
+*  schedule - schedule subprocesses to run on regular basis
+*  simplejson - json parsing
+*  requests - make http requests
+*  rollbar - error reporting
+*  datadog - timeseries data graphs/monitoring
