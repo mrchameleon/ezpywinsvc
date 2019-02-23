@@ -1,0 +1,6 @@
+ezpywinsvc/
+build/
+dist/
+__pycache__/
+debug.log
+*.pyc

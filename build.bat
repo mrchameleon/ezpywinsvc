@@ -1,0 +1,1 @@
+pyinstaller service.spec --icon=win.ico 
